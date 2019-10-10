@@ -31,10 +31,6 @@
 #include "coff-objfmt.h"
 
 
-#define UNW_FLAG_EHANDLER   0x01
-#define UNW_FLAG_UHANDLER   0x02
-#define UNW_FLAG_CHAININFO  0x04
-
 /* Bytecode callback function prototypes */
 static void win64_uwinfo_bc_destroy(void *contents);
 static void win64_uwinfo_bc_print(const void *contents, FILE *f,
@@ -289,10 +285,7 @@ win64_uwinfo_bc_tobytes(yasm_bytecode *bc, unsigned char **bufp,
     long intv;
 
     /* Version and flags */
-    if (info->ehandler)
-        YASM_WRITE_8(buf, 1 | (UNW_FLAG_EHANDLER << 3));
-    else
-        YASM_WRITE_8(buf, 1);
+    YASM_WRITE_8(buf, 1 | (info->unwind_info_flags << 3));
 
     /* Size of prolog */
     output_value(&info->prolog_size, buf, 1, (unsigned long)(buf-bufstart),

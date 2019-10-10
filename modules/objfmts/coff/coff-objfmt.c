@@ -41,6 +41,10 @@
 #define COFF_F_LSYMS    0x0008      /* local symbols NOT present */
 #define COFF_F_AR32WR   0x0100      /* 32-bit little endian file */
 
+#define UNW_FLAG_EHANDLER   0x01
+#define UNW_FLAG_UHANDLER   0x02
+#define UNW_FLAG_CHAININFO  0x04
+
 typedef struct coff_reloc {
     yasm_reloc reloc;
     enum {
@@ -1971,6 +1975,30 @@ dir_proc_frame(yasm_object *object, /*@null@*/ yasm_valparamhead *valparams,
     vp = yasm_vps_next(vp);
     if (!vp || !(name = yasm_vp_id(vp)))
         return;
+
+    while (*name) {
+        switch (*name++) {
+        case 'e':
+            objfmt_coff->unwind->unwind_info_flags |= UNW_FLAG_EHANDLER;
+            break;
+        case 'u':
+            objfmt_coff->unwind->unwind_info_flags |= UNW_FLAG_UHANDLER;
+            break;
+        case 0:
+            break;
+        default:
+            yasm_error_set(YASM_ERROR_SYNTAX,
+                N_("unknown unwind info flag ('e' and 'u' are supported)"));
+        }
+    }
+
+    vp = yasm_vps_next(vp);
+    if (!vp || !(name = yasm_vp_id(vp))) {
+        yasm_error_set(YASM_ERROR_SYNTAX,
+            N_("unwind info flags must be followed by handler name"));
+        return;
+    }
+
     objfmt_coff->unwind->ehandler =
         yasm_symtab_use(object->symtab, name, line);
 }
@@ -2247,6 +2275,7 @@ dir_endproc_frame(yasm_object *object, /*@null@*/ yasm_valparamhead *valparams,
     if (isnew) {
         csd = yasm_section_get_data(sect, &coff_section_data_cb);
         csd->flags = COFF_STYP_DATA | COFF_STYP_READ;
+        csd->flags2 = COFF_FLAG_NOBASE;
         yasm_section_set_align(sect, 8, line);
     }
 

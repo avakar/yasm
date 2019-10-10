@@ -53,6 +53,7 @@ typedef struct coff_unwind_info {
     /*@dependent@*/ yasm_symrec *prolog;    /* End of prologue */
 
     /*@null@*/ /*@dependent@*/ yasm_symrec *ehandler;   /* Error handler */
+    unsigned char unwind_info_flags;
 
     unsigned long framereg;     /* Frame register */
     yasm_value frameoff;        /* Frame offset */
